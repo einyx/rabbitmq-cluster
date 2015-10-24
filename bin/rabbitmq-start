@@ -1,7 +1,7 @@
 #!/bin/bash -le
 
 ETCDCTL="etcdctl --peers $ETCD_URL"
-ulimit -n 1024
+ulimit -n 4096
 
 NODE=$(cat /var/lib/rabbitmq/nodename)
 # Set the nodename
