@@ -16,6 +16,9 @@ RUN \
   rabbitmq-plugins enable rabbitmq_management && \
   echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config
 
+#Install delayed message exchange plugin
+RUN curl -L http://www.rabbitmq.com/community-plugins/v3.5.x/rabbitmq_delayed_message_exchange-0.0.1-rmq3.5.x-9bf265e4.ez -o /usr/lib/rabbitmq/lib/rabbitmq_server-3.5.6/plugins/rabbitmq_delayed_message_exchange.ez && rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+
 #Confd
 ENV CONFD_VERSION 0.6.2
 RUN curl -L https://github.com/kelseyhightower/confd/releases/download/v$CONFD_VERSION/confd-${CONFD_VERSION}-linux-amd64 -o /usr/local/bin/confd && \
