@@ -14,6 +14,7 @@ RUN \
   apt-get clean && \
   rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && \
   rabbitmq-plugins enable rabbitmq_management && \
+  rabbitmq-plugins enable rabbitmq_shovel rabbitmq_shovel_management && \
   echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config
 
 #Install delayed message exchange plugin
