@@ -16,6 +16,7 @@ RUN \
   DEBIAN_FRONTEND=noninteractive sudo apt-get install -f -y && \
   apt-get clean && \
   rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && \
+  rabbitmq-plugins enable rabbitmq_management && \
   echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config
 
 #Install delayed message exchange plugin
