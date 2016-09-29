@@ -6,7 +6,7 @@ ETCDCTL="etcdctl --peers $ETCD_URL"
 export RABBITMQ_NODENAME=rabbit@${NODE}
 export RABBITMQ_USER=${RABBITMQ_USER:-rabbitmq}
 export RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-rabbitmq}
-export RABBITMQ_CLUSTER_NAME=${RABBITMQ_CLUSTER_NAME:-totem}
+export RABBITMQ_CLUSTER_NAME=${RABBITMQ_CLUSTER_NAME}
 
 
 
@@ -34,7 +34,3 @@ if [ ! -f /var/lib/rabbitmq/reset ]; then
 fi
 
 echo "Cluster Initialized...."
-
-
-
-

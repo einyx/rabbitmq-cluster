@@ -1,14 +1,47 @@
-#!/bin/bash -le
+#!/bin/sh -e
+
+
+export HOST_IP=$(ip addr | grep eth0 | grep inet | awk '{print $2}' | awk -F / '{print $1}')
+export ETCD_RABBITMQ_BASE="/rabbitmq"
+export RABBITMQ_CLUSTER_NAME="${RABBITMQ_CLUSTER_NAME}"
+export LOG_IDENTIFIER="rabbitmq-cluster"
+export SEED=$($ETCDCTL get /rabbitmq/seed)
 
 ETCDCTL="etcdctl --peers $ETCD_URL"
-ulimit -n 1024
 
-NODE=$(cat /var/lib/rabbitmq/nodename)
-# Set the nodename
-export RABBITMQ_NODENAME=rabbit@${NODE}
-#export RABBITMQ_NODENAME=${RABBITMQ_NODENAME:-rabbit@$(hostname -f)}
+# Check if nodename exists. If not create a new node
+if [ ! -f /var/lib/rabbitmq/nodename ]; then
+    # Generate Persistent host file
+    echo $(cat /etc/hostname | awk -F . '{print $1}') > /var/lib/rabbitmq/nodename
+fi
+NODE=rabbit@$(cat /var/lib/rabbitmq/nodename)
 
-# call "rabbitmqctl stop" when exiting
-trap "{ echo Stopping rabbitmq; rabbitmqctl stop; exit 0; }" EXIT
+echo "Modifying Host entries..."
+echo 127.0.0.1 $NODE  >> /etc/hosts
+cat /etc/hosts /etc/confd/templates/hosts.dynamic.tmpl > /etc/confd/templates/hosts.tmpl
 
-rabbitmq-server $@
+echo "Check/Create Erlang Cookie (For RabbitMq cluster)"
+
+$ETCDCTL mk $ETCD_RABBITMQ_BASE/rabbitmq/cookie $(< /dev/urandom tr -dc A-Z-a-z-0-9 | head -c${1:-32};echo;) || echo "Utilizing existing cookie..."
+ERLANG_COOKIE=$($ETCDCTL get $ETCD_RABBITMQ_BASE/rabbitmq/cookie)
+if [ -z $ERLANG_COOKIE ]; then
+    echo "ERROR: Erlang cookie was found empty. Can not continue...."
+    exit 10
+fi
+echo "$ERLANG_COOKIE" > /var/lib/rabbitmq/.erlang.cookie
+chmod 600 /var/lib/rabbitmq/.erlang.cookie
+
+
+echo "Changing owner for attached volume to rabbitmq"
+chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
+
+/usr/local/bin/publish-node.sh
+confd -onetime
+rabbitmq-server
+
+while true
+do
+  confd -onetime
+  /usr/local/bin/publish-node.sh
+  sleep 60
+done

@@ -1,9 +1,8 @@
 confdir  = "/etc/confd"
 interval = 30
-prefix   = "/totem"
 nodes = [
-  "127.0.0.1:4001",
+  "http://etcd0:2379",
 ]
-quiet = true
+quiet = false
 debug = false
-verbose = false
+verbose = true
